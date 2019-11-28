@@ -2,12 +2,12 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-import ElementUI from 'element-ui';
+import { Button, Input } from 'element-ui';
 import Axios from 'axios';
 import Qs from 'qs';
-import 'element-ui/lib/theme-chalk/index.css';
 
-Vue.use(ElementUI)
+Vue.use(Button)
+Vue.use(Input)
 
 Axios.defaults.headers.post["Content-Type"] =
     "application/x-www-form-urlencoded";
