@@ -5,11 +5,17 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
     state: {
-        userInfo: {
-
+        adminData: {
+            'Token': ''
         }
     },
-    mutations: {},
+    mutations: {
+        addInfo(state, dataObj) {
+            Object.keys(dataObj).forEach(key => {
+                state.adminData[key] = dataObj[key]
+            })
+        }
+    },
     actions: {},
     modules: {}
 })
