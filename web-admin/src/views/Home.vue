@@ -8,17 +8,17 @@
 				<el-button class="btn btn--danger btn--right-margin" size="mini" icon="el-icon-close">删除</el-button>
 			</header>
 			<!-- <tree-data :groupData="groupData" /> -->
-				<el-tree
+			<el-tree
 				class="left-side-body"
-			:data="groupData"
-			:default-expanded-keys="[1]"
-			node-key="NodeId"
-			:props="defaultProps"
-			@node-click="handleNodeClick"
-			:current-node-key="currentNodeId"
-            highlight-current
-            ref="treeGroup"
-		></el-tree>
+				:data="groupData"
+				:default-expanded-keys="[1]"
+				node-key="NodeId"
+				:props="defaultProps"
+				@node-click="handleNodeClick"
+				:current-node-key="currentNodeId"
+				highlight-current
+				ref="treeGroup"
+			></el-tree>
 		</section>
 		<section class="right-side">
 			<header class="right-side-header">
@@ -33,7 +33,7 @@
 			</header>
 
 			<!-- <router-view :key="$route.fullPath" :id="$route.query.id" :Token="Token" /> -->
-			<test class="right-side-body" :nodeId="currentNodeId" :Token="$store.state.adminData.Token"/>
+			<test class="right-side-body" :nodeId="currentNodeId" :Token="$store.state.adminData.Token" />
 		</section>
 	</div>
 </template>
@@ -507,41 +507,19 @@
 			},
 			handleNodeClick(data) {
 				this.currentNodeId = data.NodeId;
-				// console.log("data获得当前选中NodeID",data.NodeId, "元素获得当前选中NodeID",this.$refs.treeGroup.currentNodeKey);
-                // this.showDpartUsers(data.NodeId)
 			},
-			currentNode(nodeData) {
-				console.log(nodeData, "选中的项");
-            },
-            /**
-             * 跳转
-             */
-            showDpartUsers(id){
-                id = id || this.$refs.treeGroup.currentNodeKey;
-                console.log(id, '点击');                
-                this.$router.push({ path: 'DpartUsers', query: {id}})
-            },
-            /**
-             * 获取节点后跳转
-             */
-            getDefaultNode(){
-                this.$nextTick(()=>{
-                    this.showDpartUsers()
-                })
-			},
-			delayTime(){
+			delayTime() {
 				setTimeout(() => {
-					console.log('延时');
-					this.$store.commit("addInfo", {'Token': '123'})
-					console.log('延时介绍');
-
+					console.log("延时");
+					this.$store.commit("addInfo", { Token: "123" });
+					console.log("延时介绍");
 				}, 3000);
 			}
 		},
 		created() {
 			// this.logIn();
 			// this.getBaseData();
-			this.delayTime()
+			this.delayTime();
 		},
 		components: {
 			"tree-data": () => import("../components/TreeGroup"),
@@ -566,7 +544,7 @@
 		background-color: #f8f8f8;
 		border-bottom: 1px solid #e0e0e0;
 	}
-	&-body{
+	&-body {
 		@extend .right-side-body;
 		overflow: auto;
 	}
@@ -577,11 +555,11 @@
 	&-header {
 		@extend .left-side-header;
 	}
-	&-body{
+	&-body {
 		position: absolute;
 		top: 39px;
 		bottom: 0;
-		width: 100%
+		width: 100%;
 	}
 }
 .btn {
