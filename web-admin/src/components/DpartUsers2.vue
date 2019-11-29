@@ -1,40 +1,48 @@
 <template>
-	<div id="department-users">
-		<el-table
-			ref="multipleTable"
-			:data="tableData"
-			tooltip-effect="dark"
-			style="width: 100%"
-			@selection-change="handleSelectionChange"
-			:row-class-name="rowHighLight"
-			:cell-style="textCenter"
-			border
-			:header-row-class-name="()=>'department-users__head'"
-			:header-row-style="tableHeadRow"
-			:header-cell-style="tableHeadCell"
-		>
-			<el-table-column type="index" width="40"></el-table-column>
-			<el-table-column type="selection" width="40"></el-table-column>
-			<el-table-column prop="NickName" label="登录账号" width="120"></el-table-column>
-			<el-table-column prop="Name" label="用户名称" show-overflow-tooltip></el-table-column>
-			<el-table-column prop="GroupIds" label="所属分组" show-overflow-tooltip></el-table-column>
-			<el-table-column prop="UStatus" width="100" label="状态" show-overflow-tooltip></el-table-column>
-		</el-table>
-		<div style="margin-top: 20px">
-			<el-button @click="toggleSelection([tableData[1], tableData[2]])">切换第二、第三行的选中状态</el-button>
-			<el-button @click="toggleSelection()">取消选择</el-button>
-		</div>
+	<div>
+		<section class="tusers tusers-header">
+			<ul class="tusers-ul">
+				<li class="tusers-li tusers-li--mini"></li>
+				<li class="tusers-li tusers-li--mini"></li>
+				<li class="tusers-li tusers-li--big">登录账号</li>
+				<li class="tusers-li tusers-li--auto">
+					<div>用户名称</div>
+					<div>所属分组</div>
+				</li>
+				<li class="tusers-li tusers-li--medium">状态</li>
+			</ul>
+		</section>
+		<section class="tusers tusers-body">
+			<ul class="tusers-ul" v-for="(item, index) in tableData" :key="item.UniqID">
+				<li class="tusers-li tusers-li--mini" v-text="index"></li>
+				<li class="tusers-li tusers-li--mini tusers-li--check">
+					<div class="check-box" @click="checkedItem(item)">
+						<div
+							class="check-box__icon"
+							:class="checdUsers.includes(item.UniqID) ? 'show-icon style-show':'close-icno'"
+						>
+							<i class="el-icon-check"></i>
+						</div>
+					</div>
+				</li>
+				<li class="tusers-li tusers-li--big" v-text="item.NickName"></li>
+				<li class="tusers-li tusers-li--auto">
+					<div v-text="item.Name"></div>
+					<div v-text="item.GroupIds"></div>
+				</li>
+				<li class="tusers-li tusers-li--medium" v-text="item.UStatus"></li>
+			</ul>
+			<div class="scrollbar-bar">
+				<div ref="thumb" class="scrollbar-thumb"></div>
+			</div>
+		</section>
 	</div>
 </template>
 
 <script>
 	export default {
-		// token=Y1Hapaa3y9TuoQ3D3D&keyword=&id=1&pageIndex=1&pageSize=20
+		props: ["nodeId", "Token"],
 		data() {
-			let pageInfo = {
-				pageIndex: 1,
-				pageSize: 20
-			};
 			return {
 				tableData: [
 					{
@@ -826,125 +834,121 @@
 						Password: ""
 					}
 				],
-				multipleSelection: []
+				checdUsers: []
 			};
 		},
-		props: ["Token", "id"],
 		watch: {
 			Token(value) {
 				if (value) {
-					this.getDepartmentUser();
+					console.log("第一次发送请求");
+				}
+			},
+			nodeId(value) {
+				if (value) {
+					console.log("nodeId变化发送请求");
+					this.checdUsers=[];
 				}
 			}
 		},
 		methods: {
-			toggleSelection(rows) {
-				if (rows) {
-					rows.forEach(row => {
-						this.$refs.multipleTable.toggleRowSelection(row);
-					});
+			checkedItem(item) {
+				if (this.checdUsers.includes(item.UniqID)) {
+					this.checdUsers.splice(this.checdUsers.indexOf(item.UniqID), 1);
 				} else {
-					this.$refs.multipleTable.clearSelection();
+					this.checdUsers.push(item.UniqID);
 				}
-			},
-			rowHighLight({ row, rowIndex }) {
-				if (rowIndex % 2 === 0) {
-					return "even-index body-cell";
-				}
-				return "odd-index body-cell";
-			},
-			textCenter({ row, column, rowIndex, columnIndex }) {
-				if (columnIndex === 6) {
-					return {
-						"text-align": "center"
-					};
-				}
-				return {};
-			},
-			handleSelectionChange(val) {
-				this.multipleSelection = val;
-			},
-			/**
-			 * 表头行Style
-			 */
-			tableHeadRow() {
-				return {
-					height: "26px"
-				};
-			},
-			/**
-			 * 表头单元格style
-			 */
-			tableHeadCell({ row, column, rowIndex, columnIndex }) {
-				let styleObj = {
-					"border-left": "1px solid #dee2e6",
-					"border-top-width": "0",
-					"font-size": "12px",
-					"font-weight": "bold",
-					"border-bottom-width": "2px",
-					padding: "0",
-					"line-height": "23px",
-					color: "#000",
-					"box-sizing": "border-box",
-					"background-color": "#f1f2f5",
-					"vertical-align": "middle"
-				};
-				if (columnIndex === 0) {
-					return Object.assign(styleObj, {
-						"border-left-width": "0"
-					});
-				}
-				return styleObj;
-			},
-			getDepartmentUser() {
-				console.log(this.$store.state.adminData.Token, "Token");
-				this.$axios
-					.post(
-						"/Service/RoleRightMge.svrx/GetDepartmentUsers",
-						this.$qs.stringify({
-							token: this.$store.state.adminData.Token,
-							keyword: "",
-							...this.$route.query,
-							...this.pageInfo
-						})
-					)
-					.then(res => {
-						if (res.data.ErrorCode === 0) {
-							this.tableData = Object.assign(
-								[],
-								res.data.Data._Items
-							);
-						}
-					})
-					.catch(err => console.log(err));
 			}
 		},
-		beforeRouteUpdate(to, from, next) {
-			console.log("根性");
-			this.getDepartmentUser();
-			next();
-		},
-		created() {}
+		created() {
+			// if(this.nodeId && this.$store.state.adminData.Token){
+			// 	console.log("开始发送请求获取数据");
+			// }
+		}
 	};
 </script>
 
-<style lang="scss">
-tr.body-cell {
+<style lang="scss" scoped>
+.tusers {
+	&-header {
+		background-color: #f1f2f5;
+		font-weight: bold;
+	}
+	&-body {
+		position: absolute;
+		top: 34px;
+		bottom: 0;
+		width: 100%;
+		overflow: auto;
+		ul:nth-child(2n + 1) {
+			background-color: #f2f2f2;
+		}
+		ul:hover {
+			background-color: #ececec;
+		}
+	}
+}
+.tusers-ul {
+	font-size: 0;
+	display: flex;
+	justify-content: space-between;
+}
+.tusers-li {
+	flex-shrink: 0;
+	font-size: 12px;
 	border: 1px solid #dee2e6;
-	&:hover {
-		background-color: #ececec;
+	height: 26px;
+	line-height: 26px;
+	padding: 3px 6px;
+	&--mini {
+		text-align: center;
+		width: 40px;
+	}
+	&--big {
+		width: 120px;
+	}
+	&--medium {
+		text-align: center;
+		width: 100px;
+	}
+	&--check {
+		display: flex;
 	}
 }
-tr.even-index {
-	background-color: #f2f2f2;
-	&:hover {
-		background-color: transparent;
+.tusers-li--auto {
+	border: 0;
+	padding: 0;
+	text-align: left;
+	flex-grow: 1;
+	display: flex;
+	justify-content: space-evenly;
+	div {
+		height: 26px;
+		line-height: 26px;
+		padding: 3px 6px;
+		border: 1px solid #dee2e6;
+		width: 50%;
 	}
 }
-tr.odd-index {
-	background-color: #fff;
-	&:hover {
-		background-color: transparent;
+.check-box {
+	width: 22px;
+	height: 22px;
+	line-height: 22px;
+	border: 1px solid #000;
+	margin: auto;
+	&__icon {
+		transform: scale(0);
+		background-color: #409eff;
+		i {
+			width: 100%;
+			height: 100%;
+		}
+		transition: transform 0.2s;
 	}
+}
+.show-icon {
+	transform: scale(1);
+}
+.close-icno {
+	transform: scale(0);
 }
 </style>
