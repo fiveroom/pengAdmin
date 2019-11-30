@@ -8,17 +8,18 @@
 				<el-button class="btn btn--danger btn--right-margin" size="mini" icon="el-icon-close">删除</el-button>
 			</header>
 			<!-- <tree-data :groupData="groupData" /> -->
-			<el-tree
-				class="left-side-body"
-				:data="groupData"
-				:default-expanded-keys="[1]"
-				node-key="NodeId"
-				:props="defaultProps"
-				@node-click="handleNodeClick"
-				:current-node-key="currentNodeId"
-				highlight-current
-				ref="treeGroup"
-			></el-tree>
+			<scroll-bar class="left-side-body">
+				<el-tree
+					:data="groupData"
+					:default-expanded-keys="[1]"
+					node-key="NodeId"
+					:props="defaultProps"
+					@node-click="handleNodeClick"
+					:current-node-key="currentNodeId"
+					highlight-current
+					ref="treeGroup"
+				></el-tree>
+			</scroll-bar>
 		</section>
 		<section class="right-side">
 			<header class="right-side-header">
@@ -546,7 +547,6 @@
 	}
 	&-body {
 		@extend .right-side-body;
-		overflow: auto;
 	}
 }
 .right-side {
