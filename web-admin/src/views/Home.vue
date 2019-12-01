@@ -2,12 +2,25 @@
 	<div class="home">
 		<section class="left-side">
 			<header class="left-side-header">
-				<el-button class="btn btn--safe" size="mini" icon="el-icon-plus">添加子部门</el-button>
-				<el-button class="btn btn--safe" size="mini" icon="el-icon-edit">编辑分组信息</el-button>
+				<el-button  class="btn btn--safe" size="mini" icon="el-icon-plus">添加子部门</el-button>
+				<el-button class="btn btn--safe" size="mini" :disabled="currentNodeId==1" icon="el-icon-edit">编辑分组信息</el-button>
 				<el-button class="btn btn--safe" size="mini" icon="el-icon-user-solid">设备管理员</el-button>
-				<el-button class="btn btn--danger btn--right-margin" size="mini" icon="el-icon-close">删除</el-button>
+				<el-button class="btn btn--danger btn--right-margin" size="mini" :disabled="currentNodeInfo.Childs && currentNodeInfo.Childs.length != 0" icon="el-icon-close">删除</el-button>
 			</header>
-			<tree-data :groupData="groupData" />
+			<!-- <tree-data :groupData="groupData" /> -->
+			<scroll-bar class="left-side-body">
+				<el-tree
+					default-expand-all
+					:data="groupData"
+					:default-expanded-keys="[1]"
+					node-key="NodeId"
+					:props="defaultProps"
+					@node-click="handleNodeClick"
+					:current-node-key="currentNodeId"
+					highlight-current
+					ref="treeGroup"
+				></el-tree>
+			</scroll-bar>
 		</section>
 		<section class="right-side">
 			<header class="right-side-header">
@@ -15,13 +28,12 @@
 					<i slot="suffix" class="el-input__icon el-icon-search"></i>
 				</el-input>
 				<el-button class="btn btn--safe" size="mini" icon="el-icon-plus">添加用户</el-button>
-				<el-button class="btn btn--safe" size="mini" icon="el-icon-edit">编辑用户</el-button>
-				<el-button class="btn btn--danger btn--rmargin" size="mini" icon="el-icon-close">删除用户</el-button>
-				<el-button class="btn btn--safe" size="mini" icon="el-icon-plus">组增加用户</el-button>
-				<el-button class="btn btn--danger" size="mini" icon="el-icon-close">组删除用户</el-button>
+				<el-button class="btn btn--safe" size="mini" :disabled="choiceUsersIonfo.length != 1" icon="el-icon-edit">编辑用户</el-button>
+				<el-button class="btn btn--danger btn--rmargin" size="mini" :disabled="choiceUsersIonfo.length == 0" icon="el-icon-close">删除用户</el-button>
+				<el-button class="btn btn--safe" size="mini" :disabled="currentNodeId==1" icon="el-icon-plus">组增加用户</el-button>
+				<el-button class="btn btn--danger" size="mini"  :disabled="currentNodeId==1 || choiceUsersIonfo.length == 0" icon="el-icon-close">组删除用户</el-button>
 			</header>
-			<router-view :key="$route.fullPath" :Token="Token"/>
-			<!-- <test /> -->
+			<dpart-users @pitchOn="choiceUsers" class="right-side-body" :nodeId="currentNodeId" :Token="$store.state.adminData.Token" />
 		</section>
 	</div>
 </template>
@@ -29,11 +41,22 @@
 <script>
 	export default {
 		data() {
-			let Token='';
+			let Token = "";
+			let defaultProps = {
+				label: "Name",
+				children: "Childs"
+			};
+			let currentNodeId = 1;
+			let currentNodeInfo = {};
+
 			return {
 				searchKey: "",
 				groupData: [],
-				Token
+				Token,
+				defaultProps,
+				currentNodeId,
+				currentNodeInfo,
+				choiceUsersIonfo: []
 			};
 		},
 		methods: {
@@ -85,6 +108,12 @@
 							this.groupData = this.dealGroupInfo([
 								Object.assign({}, res.data.Data)
 							]);
+							this.currentNodeInfo = Object.assign({}, this.groupData[0]);
+							this.$store.commit(
+								"totalData",
+								Object.assign({}, this.groupData)
+							);
+							console.log(this.groupData);
 						}
 					})
 					.catch(err => console.log(err));
@@ -103,96 +132,129 @@
 				if (await this.logIn()) {
 					this.getAllGroupInfo();
 				}
+			},
+			handleNodeClick(data) {
+				this.currentNodeId = data.NodeId;
+				this.currentNodeInfo = data;
+			},
+			delayTime() {
+				setTimeout(() => {
+					console.log("延时");
+					this.$store.commit("addInfo", { Token: "123" });
+					console.log("延时介绍");
+				}, 3000);
+			},
+			choiceUsers(users){
+				console.log(users);
+				this.choiceUsersIonfo = users.slice(0);
 			}
 		},
 		created() {
+			// this.logIn();
 			this.getBaseData();
+			// this.delayTime();
 		},
 		components: {
-			"tree-data": () => import("../components/TreeGroup"),
-			test: () => import("../components/DpartUsers")
-		}
+			'dpart-users': () => import("../components/DpartUsers")
+		},
+		computed: {
+			hasDpartSon() {
+				 
+			}
+		},
 	};
 </script>
 
 <style lang="scss">
-	@mixin headerFlex {
+.home {
+	height: 100vh;
+	display: flex;
+	flex-wrap: nowrap;
+}
+.left-side {
+	position: relative;
+	border-right: 1px solid #e0e0e0;
+	&-header {
 		display: flex;
 		padding: 6px 12px;
 		background-color: #f8f8f8;
 		border-bottom: 1px solid #e0e0e0;
 	}
-	.home {
-		height: 100vh;
-		display: flex;
-		flex-wrap: nowrap;
+	&-body {
+		@extend .right-side-body;
 	}
-	.left-side {
-		border-right: 1px solid #e0e0e0;
-		&-header {
-			@include headerFlex;
-		}
+}
+.right-side {
+	flex-grow: 1;
+	position: relative;
+	&-header {
+		@extend .left-side-header;
 	}
-	.right-side {
-		flex-grow: 1;
-		&-header {
-			@include headerFlex;
-		}
+	&-body {
+		position: absolute;
+		top: 39px;
+		bottom: 0;
+		width: 100%;
 	}
-	.btn {
-		flex-shrink: 0;
-		color: #fff;
-		padding: 3px 6px;
-		line-height: 1.5;
-		& + & {
-			margin-left: 6px;
-		}
+}
+.btn {
+	flex-shrink: 0;
+	color: #fff;
+	padding: 3px 6px;
+	line-height: 1.5;
+	& + & {
 		margin-left: 6px;
-		&--right-margin {
-			margin-right: 6px;
-		}
-		&--safe {
-			background-color: #007bff;
-			&:hover {
-				background-color: #0069d9;
-			}
-		}
-		&--danger {
-			background-color: #dc3545;
-			&:hover {
-				background-color: #c82333;
-			}
-		}
-		&--rmargin {
-			margin-right: 6px;
-		}
+	}
+	margin-left: 6px;
+	&--right-margin {
+		margin-right: 6px;
+	}
+	&--safe {
+		background-color: #007bff;
 		&:hover {
-			color: #fff;
-		}
-		i.el-icon-close + span {
-			margin-left: 3px;
-		}
-		i.el-icon-close {
-			width: 9px;
-			height: 12px;
+			background-color: #0069d9;
 		}
 	}
-	.search-user {
-		margin-right: 6px;
-		width: 160px;
-		color: #000;
-		.el-input__inner {
-			height: 26px;
-			line-height: 1;
-			padding-left: 6px;
-			border-top-right-radius: 0;
-			border-bottom-right-radius: 0;
-			&::-webkit-input-placeholder {
-				color: #000;
-			}
+	&--danger {
+		background-color: #dc3545;
+		&:hover {
+			background-color: #c82333;
 		}
-		.el-input__icon {
+		&:active{
+			background-color: #c82333;
+		}
+	}
+	&--rmargin {
+		margin-right: 6px;
+	}
+	&:hover {
+		color: #fff;
+	}
+	i.el-icon-close + span {
+		margin-left: 3px;
+	}
+	i.el-icon-close {
+		width: 9px;
+		height: 12px;
+	}
+
+}
+.search-user {
+	margin-right: 6px;
+	width: 160px;
+	color: #000;
+	.el-input__inner {
+		height: 26px;
+		line-height: 1;
+		padding-left: 6px;
+		border-top-right-radius: 0;
+		border-bottom-right-radius: 0;
+		&::-webkit-input-placeholder {
 			color: #000;
 		}
 	}
+	.el-input__icon {
+		color: #000;
+	}
+}
 </style>

@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
-import DpartUsers from '../components/DpartUsers';
+// import DpartUsers from '../components/DpartUsers';
 
 const originalPush = VueRouter.prototype.push
 VueRouter.prototype.push = function push(location) {
@@ -14,10 +14,10 @@ const routes = [{
     path: '/',
     name: 'home',
     component: Home,
-    children: [{
-        path: 'DpartUsers',
-        component: DpartUsers
-    }]
+    // children: [{
+    //     path: 'DpartUsers',
+    //     component: DpartUsers
+    // }]
 }]
 
 const router = new VueRouter({
