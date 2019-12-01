@@ -8,6 +8,7 @@ import Axios from 'axios';
 import Qs from 'qs';
 
 import scrollBar from './components/ScrollBar'
+import MyButton from './components/MyButton';
 
 Vue.use(Button)
 Vue.use(Input)
@@ -23,6 +24,7 @@ Vue.prototype.$axios = Axios;
 Vue.config.productionTip = false;
 
 Vue.component('scroll-bar', scrollBar);
+Vue.component('my-but', MyButton);
 
 new Vue({
     router,

@@ -2,10 +2,30 @@
 	<div class="home">
 		<section class="left-side">
 			<header class="left-side-header">
-				<el-button  class="btn btn--safe" size="mini" icon="el-icon-plus">添加子部门</el-button>
-				<el-button class="btn btn--safe" size="mini" :disabled="currentNodeId==1" icon="el-icon-edit">编辑分组信息</el-button>
+				<my-but class="butt butt--nomargin" title="添加子部门">
+					<i class="el-icon-plus"></i>
+				</my-but>
+				<my-but class="butt" :disabled="currentNodeId==1" title="编辑分组信息">
+					<i class="el-icon-edit"></i>
+				</my-but>
+				<my-but class="butt" title="设备管理员">
+					<i class="el-icon-user-solid"></i>
+				</my-but>
+				<my-but
+					class="butt"
+					hoverCls="danger-bgc-hover"
+					:disabled="currentNodeId ==1 && currentNodeInfo.Childs && currentNodeInfo.Childs.length != 0"
+					bagCls="danger-bgc"
+					shadowCls="dange-shadow"
+					bagColor="#dc3545"
+					title="删除"
+				>
+					<i class="el-icon-close"></i>
+				</my-but>
+				<!-- <el-button  class="btn btn--safe" size="mini" icon="el-icon-plus">添加子部门</el-button> -->
+				<!-- <el-button class="btn btn--safe" size="mini" :disabled="currentNodeId==1" icon="el-icon-edit">编辑分组信息</el-button>
 				<el-button class="btn btn--safe" size="mini" icon="el-icon-user-solid">设备管理员</el-button>
-				<el-button class="btn btn--danger btn--right-margin" size="mini" :disabled="currentNodeInfo.Childs && currentNodeInfo.Childs.length != 0" icon="el-icon-close">删除</el-button>
+				<el-button class="btn btn--danger btn--right-margin" size="mini" :disabled="currentNodeInfo.Childs && currentNodeInfo.Childs.length != 0" icon="el-icon-close">删除</el-button>-->
 			</header>
 			<!-- <tree-data :groupData="groupData" /> -->
 			<scroll-bar class="left-side-body">
@@ -28,12 +48,33 @@
 					<i slot="suffix" class="el-input__icon el-icon-search"></i>
 				</el-input>
 				<el-button class="btn btn--safe" size="mini" icon="el-icon-plus">添加用户</el-button>
-				<el-button class="btn btn--safe" size="mini" :disabled="choiceUsersIonfo.length != 1" icon="el-icon-edit">编辑用户</el-button>
-				<el-button class="btn btn--danger btn--rmargin" size="mini" :disabled="choiceUsersIonfo.length == 0" icon="el-icon-close">删除用户</el-button>
-				<el-button class="btn btn--safe" size="mini" :disabled="currentNodeId==1" icon="el-icon-plus">组增加用户</el-button>
-				<el-button class="btn btn--danger" size="mini"  :disabled="currentNodeId==1 || choiceUsersIonfo.length == 0" icon="el-icon-close">组删除用户</el-button>
+				<el-button
+					class="btn btn--safe"
+					size="mini"
+					:disabled="choiceUsersIonfo.length != 1"
+					icon="el-icon-edit"
+				>编辑用户</el-button>
+				<el-button class="btn btn--danger btn--rmargin" size="mini" icon="el-icon-close">删除用户</el-button>
+				<el-button
+					class="btn btn--danger btn--rmargin"
+					size="mini"
+					:disabled="choiceUsersIonfo.length == 0"
+					icon="el-icon-close"
+				>删除用户</el-button>
+				<el-button
+					class="btn btn--safe"
+					size="mini"
+					:disabled="currentNodeId==1"
+					icon="el-icon-plus"
+				>组增加用户</el-button>
+				<el-button
+					class="btn btn--danger"
+					size="mini"
+					:disabled="currentNodeId==1 || choiceUsersIonfo.length == 0"
+					icon="el-icon-close"
+				>组删除用户</el-button>
 			</header>
-			<dpart-users @pitchOn="choiceUsers" class="right-side-body" :nodeId="currentNodeId" :Token="$store.state.adminData.Token" />
+			<!-- <dpart-users @pitchOn="choiceUsers" class="right-side-body" :nodeId="currentNodeId" :Token="$store.state.adminData.Token" /> -->
 		</section>
 	</div>
 </template>
@@ -48,7 +89,6 @@
 			};
 			let currentNodeId = 1;
 			let currentNodeInfo = {};
-
 			return {
 				searchKey: "",
 				groupData: [],
@@ -88,7 +128,7 @@
 					.catch(err => {
 						console.log(err);
 						return false;
-					})
+					});
 			},
 			/**
 			 * 获取分组信息
@@ -108,7 +148,10 @@
 							this.groupData = this.dealGroupInfo([
 								Object.assign({}, res.data.Data)
 							]);
-							this.currentNodeInfo = Object.assign({}, this.groupData[0]);
+							this.currentNodeInfo = Object.assign(
+								{},
+								this.groupData[0]
+							);
 							this.$store.commit(
 								"totalData",
 								Object.assign({}, this.groupData)
@@ -144,7 +187,7 @@
 					console.log("延时介绍");
 				}, 3000);
 			},
-			choiceUsers(users){
+			choiceUsers(users) {
 				console.log(users);
 				this.choiceUsersIonfo = users.slice(0);
 			}
@@ -155,13 +198,11 @@
 			// this.delayTime();
 		},
 		components: {
-			'dpart-users': () => import("../components/DpartUsers")
+			"dpart-users": () => import("../components/DpartUsers")
 		},
 		computed: {
-			hasDpartSon() {
-				 
-			}
-		},
+			hasDpartSon() {}
+		}
 	};
 </script>
 
@@ -220,7 +261,7 @@
 		&:hover {
 			background-color: #c82333;
 		}
-		&:active{
+		&:active {
 			background-color: #c82333;
 		}
 	}
@@ -237,8 +278,26 @@
 		width: 9px;
 		height: 12px;
 	}
-
 }
+.butt {
+	flex-shrink: 0;
+	margin-left: 6px;
+	&--nomargin {
+		margin-left: 0;
+	}
+}
+.danger-bgc {
+	background-color: #dc3545;
+	&-hover:hover {
+		cursor: pointer;
+		background-color: #c82333;
+	}
+}
+.dange-shadow:active {
+	border-color: #dc3545;
+	box-shadow: 0px 0px 6px 1px #dc3545, 0px 0px 6px 1px #dc3545 inset;
+}
+
 .search-user {
 	margin-right: 6px;
 	width: 160px;
