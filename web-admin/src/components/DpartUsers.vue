@@ -30,6 +30,7 @@
 <script>
 	export default {
 		// token=Y1Hapaa3y9TuoQ3D3D&keyword=&id=1&pageIndex=1&pageSize=20
+		props:["Token"],
 		data() {
 			let pageInfo = {
 				pageIndex: 1,
@@ -40,7 +41,6 @@
 				multipleSelection: []
 			};
 		},
-		props:["Token", "id"],
 		watch:{
 			Token(value){
 				if(value){

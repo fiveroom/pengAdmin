@@ -20,7 +20,7 @@
 				<el-button class="btn btn--safe" size="mini" icon="el-icon-plus">组增加用户</el-button>
 				<el-button class="btn btn--danger" size="mini" icon="el-icon-close">组删除用户</el-button>
 			</header>
-			<router-view :key="$route.fullPath" :id="$route.query.id" :Token="Token"/>
+			<router-view :key="$route.fullPath" :Token="Token"/>
 			<!-- <test /> -->
 		</section>
 	</div>
@@ -66,9 +66,6 @@
 						console.log(err);
 						return false;
 					})
-					.then(() => {
-						this.getAllGroupInfo();
-					});
 			},
 			/**
 			 * 获取分组信息
@@ -88,8 +85,6 @@
 							this.groupData = this.dealGroupInfo([
 								Object.assign({}, res.data.Data)
 							]);
-							// console.log(this.groupData);
-							
 						}
 					})
 					.catch(err => console.log(err));
@@ -111,8 +106,7 @@
 			}
 		},
 		created() {
-			this.logIn();
-			// this.getBaseData();
+			this.getBaseData();
 		},
 		components: {
 			"tree-data": () => import("../components/TreeGroup"),
