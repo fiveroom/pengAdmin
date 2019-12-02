@@ -3,7 +3,7 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 
-import { Button, Input, Table, TableColumn, Tree, Dialog } from 'element-ui';
+import { Button, Input, Tree, Dialog, Tabs, TabPane} from 'element-ui';
 import Axios from 'axios';
 import Qs from 'qs';
 
@@ -12,10 +12,10 @@ import MyButton from './components/MyButton';
 
 Vue.use(Button)
 Vue.use(Input)
-Vue.use(Table)
-Vue.use(TableColumn)
 Vue.use(Tree)
 Vue.use(Dialog)
+Vue.use(Tabs)
+Vue.use(TabPane)
 
 Axios.defaults.headers.post["Content-Type"] =
     "application/x-www-form-urlencoded";

@@ -17,7 +17,7 @@
 				>
 					<i class="el-icon-edit"></i>
 				</my-but>
-				<my-but class="butt butt-left" @click="eidtDialog='ChoiceUserDia'" title="设备管理员">
+				<my-but class="butt butt-left" @click="eidtDialog='ChoiceUserDia';choiceType='setAdmin'" title="设备管理员">
 					<i class="el-icon-user-solid"></i>
 				</my-but>
 				<my-but
@@ -51,7 +51,7 @@
 				<el-input class="search-user" size="mini" placeholder="登录账号或名称" v-model="searchKey">
 					<i slot="suffix" class="el-input__icon el-icon-search"></i>
 				</el-input>
-				<my-but class="butt butt-right" title="添加用户">
+				<my-but class="butt butt-right" @click.native="eidtDialog='DealUser'" title="添加用户">
 					<i class="el-icon-plus"></i>
 				</my-but>
 				<my-but class="butt butt-right" :disabled="choiceUsersIonfo.length != 1" title="编辑用户">
@@ -69,6 +69,7 @@
 					<i class="el-icon-close"></i>
 				</my-but>
 				<my-but
+					@click.native="eidtDialog='ChoiceUserDia';choiceType='addGUser'"
 					class="butt butt-right butt-right--big-margin"
 					:disabled="currentNodeId==1"
 					title="组增加用户"
@@ -104,13 +105,16 @@
 			:departInfo="currentNodeInfo"
 			@confirm="syncData"
 			@closeDig="eidtDialog=''"
+			:choiceType="choiceType"
 		></component>
-
 	</div>
 </template>
 
 <script>
-import ChoiceUserDia from "../components/ChoiceUserDia";
+	import ChoiceUserDia from "../components/ChoiceUserDia";
+	import DealUser from "../components/DealUser";
+	import DealDepart from "../components/DealDepart";
+	import DpartUsers from "../components/DpartUsers";
 	export default {
 		data() {
 			let Token = "";
@@ -129,9 +133,9 @@ import ChoiceUserDia from "../components/ChoiceUserDia";
 				currentNodeInfo,
 				choiceUsersIonfo: [],
 				eidtDialog: null,
-				showDilalog: true,
 				DealDepartType: null,
-				updateData: false
+				updateData: false,
+				choiceType: null
 			};
 		},
 		watch: {
@@ -243,9 +247,7 @@ import ChoiceUserDia from "../components/ChoiceUserDia";
 			/**
 			 * 添加管理员
 			 */
-			addAdmin(){
-
-			}
+			addAdmin() {}
 		},
 		created() {
 			// this.logIn();
@@ -253,9 +255,10 @@ import ChoiceUserDia from "../components/ChoiceUserDia";
 			// this.delayTime();
 		},
 		components: {
-			"dpart-users": () => import("../components/DpartUsers"),
-			DealDepart: () => import("../components/DealDepart"),
-			ChoiceUserDia
+			"dpart-users": DpartUsers,
+			DealDepart,
+			ChoiceUserDia,
+			DealUser
 		},
 		computed: {
 			hasDpartSon() {}
@@ -264,82 +267,82 @@ import ChoiceUserDia from "../components/ChoiceUserDia";
 </script>
 
 <style lang="scss">
-	.home {
-		height: 100vh;
+.home {
+	height: 100vh;
+	display: flex;
+	flex-wrap: nowrap;
+}
+.left-side {
+	position: relative;
+	border-right: 1px solid #e0e0e0;
+	&-header {
 		display: flex;
-		flex-wrap: nowrap;
+		padding: 6px 12px;
+		background-color: #f8f8f8;
+		border-bottom: 1px solid #e0e0e0;
 	}
-	.left-side {
-		position: relative;
-		border-right: 1px solid #e0e0e0;
-		&-header {
-			display: flex;
-			padding: 6px 12px;
-			background-color: #f8f8f8;
-			border-bottom: 1px solid #e0e0e0;
-		}
-		&-body {
-			@extend .right-side-body;
-		}
+	&-body {
+		@extend .right-side-body;
 	}
-	.right-side {
-		flex-grow: 1;
-		position: relative;
-		&-header {
-			@extend .left-side-header;
-		}
-		&-body {
-			position: absolute;
-			top: 40px;
-			bottom: 0;
-			width: 100%;
-		}
+}
+.right-side {
+	flex-grow: 1;
+	position: relative;
+	&-header {
+		@extend .left-side-header;
 	}
+	&-body {
+		position: absolute;
+		top: 40px;
+		bottom: 0;
+		width: 100%;
+	}
+}
 
-	.butt {
-		flex-shrink: 0;
-		&-left {
-			margin-left: 4px;
-			&--nomargin {
-				margin-left: 0px;
-			}
-		}
-		&-right {
-			margin-left: 2px;
-			&--big-margin {
-				margin-left: 10px;
-			}
+.butt {
+	flex-shrink: 0;
+	&-left {
+		margin-left: 4px;
+		&--nomargin {
+			margin-left: 0px;
 		}
 	}
+	&-right {
+		margin-left: 2px;
+		&--big-margin {
+			margin-left: 10px;
+		}
+	}
+}
 
-	.danger-bgc {
-		background-color: #dc3545;
-		&-hover:hover {
-			cursor: pointer;
-			background-color: #c82333;
-		}
+.danger-bgc {
+	background-color: #dc3545;
+	&-hover:hover {
+		cursor: pointer;
+		background-color: #c82333;
 	}
-	.dange-shadow:active {
-		border-color: #dc3545;
-		box-shadow: 0px 0px 6px 1px #dc3545, 0px 0px 6px 1px #dc3545 inset;
-	}
+}
+.dange-shadow:active {
+	border-color: #dc3545;
+	box-shadow: 0px 0px 6px 1px #dc3545, 0px 0px 6px 1px #dc3545 inset;
+}
 
-	.search-user {
-		margin-right: 6px;
-		width: 160px !important;
-		color: #000;
-		.el-input__inner {
-			height: 26px;
-			line-height: 1;
-			padding-left: 6px;
-			border-top-right-radius: 0;
-			border-bottom-right-radius: 0;
-			&::-webkit-input-placeholder {
-				color: #000;
-			}
-		}
-		.el-input__icon {
+.search-user {
+	margin-right: 6px;
+	width: 160px !important;
+	color: #000;
+	.el-input__inner {
+		height: 26px;
+		line-height: 1;
+		padding-left: 6px;
+		border-top-right-radius: 0;
+		border-bottom-right-radius: 0;
+		&::-webkit-input-placeholder {
 			color: #000;
 		}
 	}
+	.el-input__icon {
+		color: #000;
+	}
+}
 </style>

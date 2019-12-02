@@ -254,7 +254,6 @@
 	}
 	.depart-item {
 		align-items: center;
-
 		display: flex;
 		font-size: 12px;
 		margin-bottom: 12px;
@@ -277,7 +276,6 @@
 		height: 24px;
 		flex-grow: 1;
 		border: 1px solid #ced4da;
-		// border-radius: 3px;
 		text-indent: 5px;
 		font-size: 12px;
 		outline: none;
