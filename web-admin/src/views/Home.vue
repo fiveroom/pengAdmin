@@ -2,17 +2,26 @@
 	<div class="home">
 		<section class="left-side">
 			<header class="left-side-header">
-				<my-but class="butt butt--nomargin" title="添加子部门">
+				<my-but
+					@click.native="eidtDialog='DealDepart'"
+					class="butt butt-left butt--nomargin"
+					title="添加子部门"
+				>
 					<i class="el-icon-plus"></i>
 				</my-but>
-				<my-but class="butt" :disabled="currentNodeId==1" title="编辑分组信息">
+				<my-but
+					class="butt butt-left"
+					@click.native="eidtDialog='DealDepart';DealDepartType='edit'"
+					:disabled="currentNodeId==1"
+					title="编辑分组信息"
+				>
 					<i class="el-icon-edit"></i>
 				</my-but>
-				<my-but class="butt" title="设备管理员">
+				<my-but class="butt butt-left" @click="eidtDialog='ChoiceUserDia'" title="设备管理员">
 					<i class="el-icon-user-solid"></i>
 				</my-but>
 				<my-but
-					class="butt"
+					class="butt butt-left"
 					hoverCls="danger-bgc-hover"
 					:disabled="currentNodeId ==1 && currentNodeInfo.Childs && currentNodeInfo.Childs.length != 0"
 					bagCls="danger-bgc"
@@ -22,12 +31,7 @@
 				>
 					<i class="el-icon-close"></i>
 				</my-but>
-				<!-- <el-button  class="btn btn--safe" size="mini" icon="el-icon-plus">添加子部门</el-button> -->
-				<!-- <el-button class="btn btn--safe" size="mini" :disabled="currentNodeId==1" icon="el-icon-edit">编辑分组信息</el-button>
-				<el-button class="btn btn--safe" size="mini" icon="el-icon-user-solid">设备管理员</el-button>
-				<el-button class="btn btn--danger btn--right-margin" size="mini" :disabled="currentNodeInfo.Childs && currentNodeInfo.Childs.length != 0" icon="el-icon-close">删除</el-button>-->
 			</header>
-			<!-- <tree-data :groupData="groupData" /> -->
 			<scroll-bar class="left-side-body">
 				<el-tree
 					default-expand-all
@@ -47,39 +51,66 @@
 				<el-input class="search-user" size="mini" placeholder="登录账号或名称" v-model="searchKey">
 					<i slot="suffix" class="el-input__icon el-icon-search"></i>
 				</el-input>
-				<el-button class="btn btn--safe" size="mini" icon="el-icon-plus">添加用户</el-button>
-				<el-button
-					class="btn btn--safe"
-					size="mini"
-					:disabled="choiceUsersIonfo.length != 1"
-					icon="el-icon-edit"
-				>编辑用户</el-button>
-				<el-button class="btn btn--danger btn--rmargin" size="mini" icon="el-icon-close">删除用户</el-button>
-				<el-button
-					class="btn btn--danger btn--rmargin"
-					size="mini"
+				<my-but class="butt butt-right" title="添加用户">
+					<i class="el-icon-plus"></i>
+				</my-but>
+				<my-but class="butt butt-right" :disabled="choiceUsersIonfo.length != 1" title="编辑用户">
+					<i class="el-icon-edit"></i>
+				</my-but>
+				<my-but
+					class="butt butt-right"
+					hoverCls="danger-bgc-hover"
 					:disabled="choiceUsersIonfo.length == 0"
-					icon="el-icon-close"
-				>删除用户</el-button>
-				<el-button
-					class="btn btn--safe"
-					size="mini"
+					bagCls="danger-bgc"
+					shadowCls="dange-shadow"
+					bagColor="#dc3545"
+					title="删除用户"
+				>
+					<i class="el-icon-close"></i>
+				</my-but>
+				<my-but
+					class="butt butt-right butt-right--big-margin"
 					:disabled="currentNodeId==1"
-					icon="el-icon-plus"
-				>组增加用户</el-button>
-				<el-button
-					class="btn btn--danger"
-					size="mini"
+					title="组增加用户"
+				>
+					<i class="el-icon-plus"></i>
+				</my-but>
+				<my-but
+					class="butt butt-right"
+					hoverCls="danger-bgc-hover"
 					:disabled="currentNodeId==1 || choiceUsersIonfo.length == 0"
-					icon="el-icon-close"
-				>组删除用户</el-button>
+					bagCls="danger-bgc"
+					shadowCls="dange-shadow"
+					bagColor="#dc3545"
+					title="组删除用户"
+				>
+					<i class="el-icon-minus"></i>
+				</my-but>
 			</header>
-			<!-- <dpart-users @pitchOn="choiceUsers" class="right-side-body" :nodeId="currentNodeId" :Token="$store.state.adminData.Token" /> -->
+			<dpart-users
+				@pitchOn="choiceUsers"
+				class="right-side-body"
+				:nodeId="currentNodeId"
+				:Token="$store.state.adminData.Token"
+				:searchKey="searchKey"
+				:updateData="updateData"
+				@updataDown="updateData=false"
+			/>
 		</section>
+		<component
+			:is="eidtDialog"
+			@getChoiceU="addAdmin"
+			:DealDepartType="DealDepartType"
+			:departInfo="currentNodeInfo"
+			@confirm="syncData"
+			@closeDig="eidtDialog=''"
+		></component>
+
 	</div>
 </template>
 
 <script>
+import ChoiceUserDia from "../components/ChoiceUserDia";
 	export default {
 		data() {
 			let Token = "";
@@ -90,16 +121,34 @@
 			let currentNodeId = 1;
 			let currentNodeInfo = {};
 			return {
-				searchKey: "",
+				searchKey: null,
 				groupData: [],
 				Token,
 				defaultProps,
 				currentNodeId,
 				currentNodeInfo,
-				choiceUsersIonfo: []
+				choiceUsersIonfo: [],
+				eidtDialog: null,
+				showDilalog: true,
+				DealDepartType: null,
+				updateData: false
 			};
 		},
+		watch: {
+			searchKey(value) {}
+		},
 		methods: {
+			test() {
+				console.log("点我");
+			},
+			/**
+			 * 同步信息
+			 */
+			syncData() {
+				this.getAllGroupInfo();
+				this.currentNodeId = 1;
+				this.updateData = true;
+			},
 			/**
 			 * 登录
 			 */
@@ -190,6 +239,12 @@
 			choiceUsers(users) {
 				console.log(users);
 				this.choiceUsersIonfo = users.slice(0);
+			},
+			/**
+			 * 添加管理员
+			 */
+			addAdmin(){
+
 			}
 		},
 		created() {
@@ -198,7 +253,9 @@
 			// this.delayTime();
 		},
 		components: {
-			"dpart-users": () => import("../components/DpartUsers")
+			"dpart-users": () => import("../components/DpartUsers"),
+			DealDepart: () => import("../components/DealDepart"),
+			ChoiceUserDia
 		},
 		computed: {
 			hasDpartSon() {}
@@ -207,113 +264,82 @@
 </script>
 
 <style lang="scss">
-.home {
-	height: 100vh;
-	display: flex;
-	flex-wrap: nowrap;
-}
-.left-side {
-	position: relative;
-	border-right: 1px solid #e0e0e0;
-	&-header {
+	.home {
+		height: 100vh;
 		display: flex;
-		padding: 6px 12px;
-		background-color: #f8f8f8;
-		border-bottom: 1px solid #e0e0e0;
+		flex-wrap: nowrap;
 	}
-	&-body {
-		@extend .right-side-body;
-	}
-}
-.right-side {
-	flex-grow: 1;
-	position: relative;
-	&-header {
-		@extend .left-side-header;
-	}
-	&-body {
-		position: absolute;
-		top: 39px;
-		bottom: 0;
-		width: 100%;
-	}
-}
-.btn {
-	flex-shrink: 0;
-	color: #fff;
-	padding: 3px 6px;
-	line-height: 1.5;
-	& + & {
-		margin-left: 6px;
-	}
-	margin-left: 6px;
-	&--right-margin {
-		margin-right: 6px;
-	}
-	&--safe {
-		background-color: #007bff;
-		&:hover {
-			background-color: #0069d9;
+	.left-side {
+		position: relative;
+		border-right: 1px solid #e0e0e0;
+		&-header {
+			display: flex;
+			padding: 6px 12px;
+			background-color: #f8f8f8;
+			border-bottom: 1px solid #e0e0e0;
+		}
+		&-body {
+			@extend .right-side-body;
 		}
 	}
-	&--danger {
-		background-color: #dc3545;
-		&:hover {
-			background-color: #c82333;
+	.right-side {
+		flex-grow: 1;
+		position: relative;
+		&-header {
+			@extend .left-side-header;
 		}
-		&:active {
-			background-color: #c82333;
+		&-body {
+			position: absolute;
+			top: 40px;
+			bottom: 0;
+			width: 100%;
 		}
 	}
-	&--rmargin {
-		margin-right: 6px;
-	}
-	&:hover {
-		color: #fff;
-	}
-	i.el-icon-close + span {
-		margin-left: 3px;
-	}
-	i.el-icon-close {
-		width: 9px;
-		height: 12px;
-	}
-}
-.butt {
-	flex-shrink: 0;
-	margin-left: 6px;
-	&--nomargin {
-		margin-left: 0;
-	}
-}
-.danger-bgc {
-	background-color: #dc3545;
-	&-hover:hover {
-		cursor: pointer;
-		background-color: #c82333;
-	}
-}
-.dange-shadow:active {
-	border-color: #dc3545;
-	box-shadow: 0px 0px 6px 1px #dc3545, 0px 0px 6px 1px #dc3545 inset;
-}
 
-.search-user {
-	margin-right: 6px;
-	width: 160px;
-	color: #000;
-	.el-input__inner {
-		height: 26px;
-		line-height: 1;
-		padding-left: 6px;
-		border-top-right-radius: 0;
-		border-bottom-right-radius: 0;
-		&::-webkit-input-placeholder {
+	.butt {
+		flex-shrink: 0;
+		&-left {
+			margin-left: 4px;
+			&--nomargin {
+				margin-left: 0px;
+			}
+		}
+		&-right {
+			margin-left: 2px;
+			&--big-margin {
+				margin-left: 10px;
+			}
+		}
+	}
+
+	.danger-bgc {
+		background-color: #dc3545;
+		&-hover:hover {
+			cursor: pointer;
+			background-color: #c82333;
+		}
+	}
+	.dange-shadow:active {
+		border-color: #dc3545;
+		box-shadow: 0px 0px 6px 1px #dc3545, 0px 0px 6px 1px #dc3545 inset;
+	}
+
+	.search-user {
+		margin-right: 6px;
+		width: 160px !important;
+		color: #000;
+		.el-input__inner {
+			height: 26px;
+			line-height: 1;
+			padding-left: 6px;
+			border-top-right-radius: 0;
+			border-bottom-right-radius: 0;
+			&::-webkit-input-placeholder {
+				color: #000;
+			}
+		}
+		.el-input__icon {
 			color: #000;
 		}
 	}
-	.el-input__icon {
-		color: #000;
-	}
-}
 </style>

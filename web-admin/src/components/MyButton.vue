@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div class="external">
 		<div @click="judgeDis" :class="['mybut', judgeEffect(this.shadowCls, 'base-shadow')]">
 			<div :class="['mybut-content',bagCls?bagCls:'base-bgc',judgeEffect(this.hoverCls, 'base-bgc-hover')]">
 				<slot></slot>
@@ -39,22 +39,22 @@
 .mybut {
 	font-size: 12px;
 	color: #fff;
-	// border: 1px solid transparent;
-	border-width: 0.5px;
-	border-style: solid;
 	padding: 2px;
 	width: fit-content;
 	background-clip: content-box;
-	border-radius: 3px;
 	&-content {
+		transition: background-color .5s;
 		position: relative;
 		border-radius: 3px;
-		height: 25px;
-		line-height: 25px;
+		height: 23px;
+		line-height: 23px;
 		padding: 0px 6px;
 		span {
 			margin-left: 2px;
 		}
+	}
+	&:active{
+		transition: box-shadow .5s;
 	}
 }
 .mybut-disabled {
@@ -75,7 +75,7 @@
 }
 
 .base-shadow:active {
-	border-color: #007bff;
+	// border-color: #007bff;
 	box-shadow: 0px 0px 6px 1px #007bff, 0px 0px 6px 1px #007bff inset;
 }
 </style>

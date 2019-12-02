@@ -31,7 +31,7 @@
 						<div v-text="item.Name"></div>
 						<div>{{getDepartmentName(item.GroupIds)}}</div>
 					</li>
-					<li class="tusers-li tusers-li--medium" v-text="item.UStatus"></li>
+					<li class="tusers-li tusers-li--medium">{{item.UStatus | judegUStatus}}</li>
 				</ul>
 			</section>
 		</scroll-bar>
@@ -66,7 +66,7 @@
 					<span>第</span>
 
 					<input v-model="pageIndex" class="input-page" type="text" />
-					<span>共{{Math.floor(tableData.TotalCount/pageSize)}}页</span>
+					<span>共{{Math.ceil(tableData.TotalCount/pageSize) || 0}}页</span>
 				</div>
 				<div class="paging-item paging-left__but">
 					<button
@@ -89,15 +89,14 @@
 					</button>
 				</div>
 			</div>
-			<div class="paging-right">显示1到{{pageSize}},共{{tableData.TotalCount}}条记录</div>
+			<div class="paging-right">显示1到{{pageSize}},共{{tableData.TotalCount || 0}}条记录</div>
 		</section>
 	</div>
 </template>
 
 <script>
-	import { log } from "util";
 	export default {
-		props: ["nodeId", "Token"],
+		props: ["nodeId", "Token", "choice", "searchKey", "updateData"],
 		data() {
 			let pageNum = null;
 			return {
@@ -125,17 +124,22 @@
 				}
 			},
 			nodeId(value) {
-				if (value) {
-					console.log("nodeId变化发送请求");
-					this.getDepartmentUser();
-					this.checdUsers = [];
-					this.pageIndex = 1;
-					this.pageSize = 20;
-					this.pageNum = null;
-				}
+				console.log("nodeId变化发送请求");
+				this.getDepartmentUser();
+				this.checdUsers = [];
+				this.pageIndex = 1;
+				this.pageSize = 20;
+				this.pageNum = null;
+			},
+			searchKey(value) {
+				this.checdUsers = [];
+				this.pageIndex = 1;
+				this.pageSize = 20;
+				this.pageNum = null;
+				this.getDepartmentUser();
 			},
 			pageSize(newV, oldV) {
-				this.pageNum = Math.floor(
+				this.pageNum = Math.ceil(
 					this.tableData.TotalCount / parseInt(this.pageSize)
 				);
 				this.getDepartmentUser();
@@ -154,15 +158,29 @@
 				} else {
 					this.pageIndex = newV;
 				}
+			},
+			updateData(value) {
+				this.getDepartmentUser();
+				this.checdUsers = [];
+				this.pageIndex = 1;
+				this.pageSize = 20;
+				this.pageNum = null;
+				this.$emit("updataDown");
+				console.log("更新");
 			}
 		},
 		methods: {
 			checkedItem(data) {
-				let arrUniqId = this.checdUsers.map(item => item.UniqID);
-				if (arrUniqId.includes(data.UniqID)) {
-					this.checdUsers.splice(arrUniqId.indexOf(data.UniqID), 1);
+				if (this.choice) {
+					this.checdUsers.pop();
+					this.checdUsers.push(data);
 				} else {
-					this.checdUsers.push(Object.assign({}, data));
+					let arrUniqId = this.checdUsers.map(item => item.UniqID);
+					if (arrUniqId.includes(data.UniqID)) {
+						this.checdUsers.splice(arrUniqId.indexOf(data.UniqID), 1);
+					} else {
+						this.checdUsers.push(Object.assign({}, data));
+					}
 				}
 				this.$emit("pitchOn", this.checdUsers);
 			},
@@ -170,13 +188,12 @@
 			 * 获取部门用户
 			 */
 			getDepartmentUser() {
-				console.log(this.$store.state.adminData.Token, "Token");
 				this.$axios
 					.post(
 						"/Service/RoleRightMge.svrx/GetDepartmentUsers",
 						this.$qs.stringify({
 							token: this.$store.state.adminData.Token,
-							keyword: "",
+							keyword: this.searchKey,
 							id: this.nodeId,
 							pageIndex: this.pageIndex,
 							pageSize: this.pageSize
@@ -185,9 +202,8 @@
 					.then(res => {
 						if (res.data.ErrorCode === 0) {
 							this.tableData = Object.assign({}, res.data.Data);
-							this.pageNum = Math.floor(
-								this.tableData.TotalCount /
-									parseInt(this.pageSize)
+							this.pageNum = Math.ceil(
+								this.tableData.TotalCount / parseInt(this.pageSize)
 							);
 						}
 					})
@@ -248,12 +264,21 @@
 					}
 				}
 				this.pageIndex = pageIndex;
-			}
+			},
+			/**
+			 * 查询
+			 */
+			queryData() {}
 		},
 		created() {
-			// if(this.nodeId && this.$store.state.adminData.Token){
-			// 	console.log("开始发送请求获取数据");
-			// }
+			console.log(this.nodeId, "哈哈哈哈");
+			if (this.choice && this.nodeId) {
+				this.checdUsers = [];
+				this.pageIndex = 1;
+				this.pageSize = 10;
+				this.pageNum = null;
+				this.getDepartmentUser();
+			}
 		}
 	};
 </script>
@@ -336,8 +361,6 @@
 		display: flex;
 		justify-content: space-evenly;
 		div {
-			height: 26px;
-			line-height: 26px;
 			// border: 1px solid #dee2e6;
 			border-left: 1px solid #dee2e6;
 			width: 33.3%;
@@ -383,6 +406,8 @@
 		justify-content: space-between;
 		padding: 6px 12px;
 		align-items: center;
+		border-top: 1px solid #ddd;
+		border-bottom: 1px solid #ddd;
 		&-item {
 			flex-shrink: 0;
 			padding: 0 12px;
