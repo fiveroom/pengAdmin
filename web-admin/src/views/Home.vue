@@ -3,7 +3,7 @@
 		<section class="left-side">
 			<header class="left-side-header">
 				<my-but
-					@click.native="eidtDialog='DealDepart'"
+					@click.native="eidtDialog='DealDepart';DealDepartType=''"
 					class="butt butt-left butt--nomargin"
 					title="添加子部门"
 				>
@@ -17,17 +17,22 @@
 				>
 					<i class="el-icon-edit"></i>
 				</my-but>
-				<my-but class="butt butt-left" @click="eidtDialog='ChoiceUserDia';choiceType='setAdmin'" title="设备管理员">
+				<my-but
+					class="butt butt-left"
+					@click.native="eidtDialog='ChoiceUserDia';choiceType='setAdmin'"
+					title="设备管理员"
+				>
 					<i class="el-icon-user-solid"></i>
 				</my-but>
 				<my-but
 					class="butt butt-left"
 					hoverCls="danger-bgc-hover"
-					:disabled="currentNodeId ==1 && currentNodeInfo.Childs && currentNodeInfo.Childs.length != 0"
+					:disabled="noAllowDelG"
 					bagCls="danger-bgc"
 					shadowCls="dange-shadow"
 					bagColor="#dc3545"
 					title="删除"
+					@click.native="deleteData('deleteDepart')"
 				>
 					<i class="el-icon-close"></i>
 				</my-but>
@@ -51,10 +56,19 @@
 				<el-input class="search-user" size="mini" placeholder="登录账号或名称" v-model="searchKey">
 					<i slot="suffix" class="el-input__icon el-icon-search"></i>
 				</el-input>
-				<my-but class="butt butt-right" @click.native="eidtDialog='DealUser'" title="添加用户">
+				<my-but
+					class="butt butt-right"
+					@click.native="eidtDialog='DealUser';DealUserType='addUser'"
+					title="添加用户"
+				>
 					<i class="el-icon-plus"></i>
 				</my-but>
-				<my-but class="butt butt-right" :disabled="choiceUsersIonfo.length != 1" title="编辑用户">
+				<my-but
+					class="butt butt-right"
+					@click.native="eidtDialog='DealUser';DealUserType='editUser'"
+					:disabled="choiceUsersIonfo.length != 1"
+					title="编辑用户"
+				>
 					<i class="el-icon-edit"></i>
 				</my-but>
 				<my-but
@@ -65,6 +79,7 @@
 					shadowCls="dange-shadow"
 					bagColor="#dc3545"
 					title="删除用户"
+					@click.native="deleteData('deleteUser')"
 				>
 					<i class="el-icon-close"></i>
 				</my-but>
@@ -84,6 +99,7 @@
 					shadowCls="dange-shadow"
 					bagColor="#dc3545"
 					title="组删除用户"
+					@click.native="deletGroupUser"
 				>
 					<i class="el-icon-minus"></i>
 				</my-but>
@@ -96,21 +112,27 @@
 				:searchKey="searchKey"
 				:updateData="updateData"
 				@updataDown="updateData=false"
+				@haveDepartUser="haveDepartUser"
 			/>
 		</section>
 		<component
 			:is="eidtDialog"
-			@getChoiceU="addAdmin"
+			@getChoiceU="getUsers"
 			:DealDepartType="DealDepartType"
 			:departInfo="currentNodeInfo"
 			@confirm="syncData"
-			@closeDig="eidtDialog=''"
+			@closeDig="eidtDialog='',choiceType = null"
 			:choiceType="choiceType"
+			:currentUserInfo="choiceUsersIonfo"
+			:DealUserType="DealUserType"
+			:count="2"
 		></component>
 	</div>
 </template>
 
 <script>
+	import { MessageBox } from "element-ui";
+	import { Message } from "element-ui";
 	import ChoiceUserDia from "../components/ChoiceUserDia";
 	import DealUser from "../components/DealUser";
 	import DealDepart from "../components/DealDepart";
@@ -135,7 +157,9 @@
 				eidtDialog: null,
 				DealDepartType: null,
 				updateData: false,
-				choiceType: null
+				choiceType: null,
+				DealUserType: null,
+				noAllowDelG: true
 			};
 		},
 		watch: {
@@ -150,8 +174,14 @@
 			 */
 			syncData() {
 				this.getAllGroupInfo();
-				this.currentNodeId = 1;
 				this.updateData = true;
+				this.choiceUsersIonfo = [];
+				this.eidtDialog = null;
+				this.DealDepartType = null;
+				this.updateData = false;
+				this.choiceType = null;
+				this.DealUserType = null;
+				this.noAllowDelG = true;
 			},
 			/**
 			 * 登录
@@ -199,17 +229,17 @@
 					.then(res => {
 						if (res.data.ErrorCode === 0) {
 							this.groupData = this.dealGroupInfo([
-								Object.assign({}, res.data.Data)
+								JSON.parse(JSON.stringify(res.data.Data))
 							]);
 							this.currentNodeInfo = Object.assign(
 								{},
 								this.groupData[0]
 							);
-							this.$store.commit(
-								"totalData",
-								Object.assign({}, this.groupData)
-							);
-							console.log(this.groupData);
+							this.currentNodeId = 1;
+							this.$store.commit("totalData", [
+								this.groupData,
+								res.data.Data
+							]);
 						}
 					})
 					.catch(err => console.log(err));
@@ -220,7 +250,7 @@
 			dealGroupInfo(groupData) {
 				return groupData.map(item => {
 					item.MaxId = item.Childs.MaxID;
-					item.Childs = this.dealGroupInfo(item.Childs._Items);
+					item.Childs = this.dealGroupInfo(item.Childs._Items) || [];
 					return item;
 				});
 			},
@@ -232,27 +262,207 @@
 			handleNodeClick(data) {
 				this.currentNodeId = data.NodeId;
 				this.currentNodeInfo = data;
+				this.haveDepartUser();
 			},
-			delayTime() {
+			delayTime(call) {
 				setTimeout(() => {
-					console.log("延时");
-					this.$store.commit("addInfo", { Token: "123" });
-					console.log("延时介绍");
+					call;
 				}, 3000);
 			},
 			choiceUsers(users) {
 				console.log(users);
 				this.choiceUsersIonfo = users.slice(0);
+				console.log(this.choiceUsersIonfo);
 			},
 			/**
 			 * 添加管理员
 			 */
-			addAdmin() {}
+			addAdmin(users) {
+				users = users.map(item => item.Name).join();
+				console.log(users);
+				this.$axios
+					.post(
+						"/Service/RoleRightMge.svrx/UpdateDepartmentAdmins",
+						this.$qs.stringify({
+							Token: this.$store.state.adminData.Token,
+							id: this.currentNodeId,
+							userIds: users,
+							option: 0
+						})
+					)
+					.then(res => {
+						Message({
+							showClose: true,
+							message: "修改失败 NULL",
+							type: "error"
+						});
+					});
+			},
+			/**
+			 * 获取选中的用户
+			 */
+			getUsers(data, choiceType) {
+				this.choiceType = null;
+				this.eidtDialog = null;
+				if (choiceType == "setAdmin") {
+					this.addAdmin(value);
+				} else if (choiceType == "addGUser") {
+					this.judgeAddGuser(data);
+				}
+			},
+			/**
+			 * 组增加用户判断
+			 */
+			judgeAddGuser(users) {
+				MessageBox({
+					title: "是否从原组中移除",
+					showCancelButton: true,
+					confirmButtonText: "是",
+					cancelButtonText: "否",
+					beforeClose: (action, instance, done) => {
+						instance.confirmButtonLoading = true;
+						let option = action === "confirm" ? 2 : 0;
+						this.addGuser(option, users).then(res => {
+							console.log(res);
+							instance.confirmButtonLoading = false;
+							done();
+						});
+					}
+				}).then(action => {
+					this.syncData();
+					Message.success({
+						showClose: true,
+						message: "删除成功",
+						type: "success"
+					});
+				});
+			},
+			/**
+			 * 组增加用户执行  没有管理员权限
+			 */
+			addGuser(option, users) {
+				let data = JSON.stringify({
+					isShow: true,
+					MaxID: 0,
+					TotalCount: 0,
+					_Items: users
+				});
+				console.log(users);
+				return this.$axios.post(
+					"/Service/RoleRightMge.svrx/BatchAddDepartmentUser",
+					this.$qs.stringify({
+						token: this.$store.state.adminData.Token,
+						id: this.currentNodeId,
+						users: data,
+						option
+					})
+				);
+			},
+			/**
+			 * 组删除用户
+			 */
+			deletGroupUser() {
+				let ids = this.choiceUsersIonfo.map(item => item.UniqID).join();
+				this.$axios
+					.post(
+						"/Service/RoleRightMge.svrx/BatchRemoveDepartmentUser",
+						this.$qs.stringify({
+							token: this.$store.state.adminData.Token,
+							id: this.currentNodeId,
+							ids,
+							option: 0
+						})
+					)
+					.then(res => {
+						console.log(res);
+						this.syncData();
+					});
+			},
+			async haveDepartUser(status) {
+				let data = await this.$axios.post(
+					"/Service/RoleRightMge.svrx/GetDepartmentUsers",
+					this.$qs.stringify({
+						token: this.$store.state.adminData.Token,
+						keyword: "",
+						id: this.currentNodeId,
+						pageIndex: 1,
+						pageSize: 20
+					})
+				);
+				if (this.currentNodeInfo.hasOwnProperty("Childs")) {
+					console.log(
+						this.currentNodeId == 1 &&
+							this.currentNodeInfo.Childs != 0 &&
+							data.data.Data.TotalCount != 0
+					);
+					this.noAllowDelG =
+						this.currentNodeId == 1 ||
+						this.currentNodeInfo.Childs != 0 ||
+						data.data.Data.TotalCount != 0;
+				} else {
+					this.noAllowDelG = false;
+				}
+			},
+			/**
+			 * 删除数据
+			 */
+			deleteData(type) {
+				MessageBox({
+					title: "确定要删除",
+					showCancelButton: true,
+					confirmButtonText: "确定",
+					cancelButtonText: "取消",
+					beforeClose: (action, instance, done) => {
+						if (action === "confirm") {
+							instance.confirmButtonLoading = true;
+							Promise.all(this[type]()).then(res => {
+								done();
+								instance.confirmButtonLoading = false;
+							});
+						} else {
+							done();
+						}
+					}
+				}).then(action => {
+					this.syncData();
+					Message.success({
+						showClose: true,
+						message: "删除成功",
+						type: "success"
+					});
+				});
+			},
+			/**
+			 * 删除用户
+			 */
+			deleteUser() {
+				return this.choiceUsersIonfo.map(item => {
+					return this.$axios.post(
+						"/Service/RoleRightMge.svrx/DeleteUser",
+						this.$qs.stringify({
+							Token: this.$store.state.adminData.Token,
+							userId: item.UniqID
+						})
+					);
+				});
+			},
+			/**
+			 * 删除部门
+			 */
+			deleteDepart() {
+				return [
+					this.$axios.post(
+						"/Service/RoleRightMge.svrx/DeleteDepartment",
+						this.$qs.stringify({
+							Token: this.$store.state.adminData.Token,
+							id: this.currentNodeId
+						})
+					)
+				];
+			}
 		},
 		created() {
-			// this.logIn();
 			this.getBaseData();
-			// this.delayTime();
 		},
 		components: {
 			"dpart-users": DpartUsers,
@@ -267,82 +477,82 @@
 </script>
 
 <style lang="scss">
-.home {
-	height: 100vh;
-	display: flex;
-	flex-wrap: nowrap;
-}
-.left-side {
-	position: relative;
-	border-right: 1px solid #e0e0e0;
-	&-header {
+	.home {
+		height: 100vh;
 		display: flex;
-		padding: 6px 12px;
-		background-color: #f8f8f8;
-		border-bottom: 1px solid #e0e0e0;
+		flex-wrap: nowrap;
 	}
-	&-body {
-		@extend .right-side-body;
-	}
-}
-.right-side {
-	flex-grow: 1;
-	position: relative;
-	&-header {
-		@extend .left-side-header;
-	}
-	&-body {
-		position: absolute;
-		top: 40px;
-		bottom: 0;
-		width: 100%;
-	}
-}
-
-.butt {
-	flex-shrink: 0;
-	&-left {
-		margin-left: 4px;
-		&--nomargin {
-			margin-left: 0px;
+	.left-side {
+		position: relative;
+		border-right: 1px solid #e0e0e0;
+		&-header {
+			display: flex;
+			padding: 6px 12px;
+			background-color: #f8f8f8;
+			border-bottom: 1px solid #e0e0e0;
+		}
+		&-body {
+			@extend .right-side-body;
 		}
 	}
-	&-right {
-		margin-left: 2px;
-		&--big-margin {
-			margin-left: 10px;
+	.right-side {
+		flex-grow: 1;
+		position: relative;
+		&-header {
+			@extend .left-side-header;
+		}
+		&-body {
+			position: absolute;
+			top: 40px;
+			bottom: 0;
+			width: 100%;
 		}
 	}
-}
 
-.danger-bgc {
-	background-color: #dc3545;
-	&-hover:hover {
-		cursor: pointer;
-		background-color: #c82333;
+	.butt {
+		flex-shrink: 0;
+		&-left {
+			margin-left: 4px;
+			&--nomargin {
+				margin-left: 0px;
+			}
+		}
+		&-right {
+			margin-left: 2px;
+			&--big-margin {
+				margin-left: 10px;
+			}
+		}
 	}
-}
-.dange-shadow:active {
-	border-color: #dc3545;
-	box-shadow: 0px 0px 6px 1px #dc3545, 0px 0px 6px 1px #dc3545 inset;
-}
 
-.search-user {
-	margin-right: 6px;
-	width: 160px !important;
-	color: #000;
-	.el-input__inner {
-		height: 26px;
-		line-height: 1;
-		padding-left: 6px;
-		border-top-right-radius: 0;
-		border-bottom-right-radius: 0;
-		&::-webkit-input-placeholder {
+	.danger-bgc {
+		background-color: #dc3545;
+		&-hover:hover {
+			cursor: pointer;
+			background-color: #c82333;
+		}
+	}
+	.dange-shadow:active {
+		border-color: #dc3545;
+		box-shadow: 0px 0px 6px 1px #dc3545, 0px 0px 6px 1px #dc3545 inset;
+	}
+
+	.search-user {
+		margin-right: 6px;
+		width: 160px !important;
+		color: #000;
+		.el-input__inner {
+			height: 26px;
+			line-height: 1;
+			padding-left: 6px;
+			border-top-right-radius: 0;
+			border-bottom-right-radius: 0;
+			&::-webkit-input-placeholder {
+				color: #000;
+			}
+		}
+		.el-input__icon {
 			color: #000;
 		}
 	}
-	.el-input__icon {
-		color: #000;
-	}
-}
 </style>

@@ -6,6 +6,7 @@
 		custom-class="choice-my-dialog"
 		title="选择用户"
 		:close-on-click-modal="false"
+		@close="$emit('closeDig')"
 	>
 		<header class="search-dialog">
 			<el-input
@@ -23,13 +24,13 @@
 				@pitchOn="choiceUsers"
 				class="choice-table"
 				:nodeId="1"
-				:choice="true"
+				:choice="count"
 				:Token="$store.state.adminData.Token"
                 :searchKey="searchKey"
 			/>
 		</div>
 		<footer class="deal-footer">
-			<button @click="confimChoice" class="deal-footer-btn deal-footer-btn--yes">
+			<button ref="confimBut" @click="confimChoice" class="deal-footer-btn deal-footer-btn--yes">
 				<i class="el-icon-circle-check"></i>
 				<span>确认</span>
 			</button>
@@ -44,22 +45,28 @@
 <script>
 	import DpartUsers from "../components/DpartUsers";
 	export default {
-		props: ["nodeId", "choiceType"],
+		props: ["nodeId", "choiceType",'count'],
 		data() {
 			return {
 				showDilalog: true,
-				searchKey: ""
+				searchKey: "",
+				choiceUsersIonfo: [] // 选择的用户信息
 			};
         },
 		methods: {
 			choiceUsers(users) {
 				console.log(users);
 				this.choiceUsersIonfo = users.slice(0);
+				if(this.choiceUsersIonfo.length === 0){
+					this.$refs.confimBut.disabled = "disabled"
+				}else{
+					delete this.$refs.confimBut.disabled;
+				}
 			},
 			confimChoice() {
 				this.outDilalog()
 				this.$emit("getChoiceU", this.choiceUsersIonfo, this.choiceType);
-            },
+			},
             outDilalog(){
                 this.showDilalog = false;
 				this.$emit("closeDig");
@@ -121,4 +128,5 @@
 			color: #000;
 		}
 	}
+	
 </style>

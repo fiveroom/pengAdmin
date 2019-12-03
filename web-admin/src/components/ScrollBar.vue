@@ -228,7 +228,7 @@
 						this.eleSize.scrContentScrH
 					).toFixed(2);
                     this.eleSize.scrBlockH = scrBlockH;
-                    console.log('5px');
+                    // console.log('5px');
 					this.$refs.scrollBlock.style.height = scrBlockH + "px";
 				} else {
                     this.$refs.scrollSlot.style.width = "0";
@@ -237,7 +237,7 @@
 		},
 		mounted() {
 			this.observer = new MutationObserver(mutations => {
-                console.log('object');
+                // console.log('object');
 				this.getEleSize();
 			});
 			this.getEleSize();

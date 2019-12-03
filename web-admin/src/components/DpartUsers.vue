@@ -171,7 +171,8 @@
 		},
 		methods: {
 			checkedItem(data) {
-				if (this.choice) {
+				console.log(this.choice);
+				if (this.choice == 1) {
 					this.checdUsers.pop();
 					this.checdUsers.push(data);
 				} else {
@@ -202,6 +203,8 @@
 					.then(res => {
 						if (res.data.ErrorCode === 0) {
 							this.tableData = Object.assign({}, res.data.Data);
+							this.$emit("haveDepartUser", this.tableData != 0);
+
 							this.pageNum = Math.ceil(
 								this.tableData.TotalCount / parseInt(this.pageSize)
 							);

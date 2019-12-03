@@ -8,7 +8,8 @@ export default new Vuex.Store({
         adminData: {
             'Token': ''
         },
-        departments: []
+        departments: [],
+        oldDepartData: {}
     },
     mutations: {
         addInfo(state, dataObj) {
@@ -16,8 +17,9 @@ export default new Vuex.Store({
                 state.adminData[key] = dataObj[key]
             })
         },
-        totalData(state, dataObj) {
-            state.departments = Object.assign([], dataObj)
+        totalData(state, dealData) {
+            state.departments = Object.assign([], dealData[0])
+            state.oldDepartData = Object.assign({}, dealData[1])
         }
     },
     actions: {},

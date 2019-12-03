@@ -12,7 +12,7 @@
 			<div class="depart">
 				<div class="depart-item">
 					<p>父级分组</p>
-					<input v-model="departInfo.Name" class="depart-input depart-input__name" type="text" readonly />
+					<input v-model="fName" class="depart-input depart-input__name" type="text" readonly />
 				</div>
 				<div class="depart-item">
 					<p>分组名称</p>
@@ -71,6 +71,7 @@
 			@closeDig="choiceName=''"
 			@getChoiceU="choiceUser"
 			:choiceType="choiceType"
+			:count="1"
 		></component>
 	</div>
 </template>
@@ -91,7 +92,8 @@
 			};
 			return {
 				Remark: null,
-				Name: "",
+				fName: "", // 父级分组
+				Name: "", // 分组名称
 				showDilalog: true,
 				choiceName: null,
 				DptManager,
@@ -106,15 +108,24 @@
 			}
 		},
 		methods: {
+			/**
+			 * 判断选择框是否禁用
+			 */
 			judegBtnDis() {
 				if (this.departInfo.NodeId === 1) {
 					this.$refs.choiceBtn1.disabled = "disabled";
 					this.$refs.choiceBtn2.disabled = "disabled";
 				}
 			},
+			/**
+			 * 关闭
+			 */
 			closeDig() {
 				this.$emit("closeDig");
 			},
+			/**
+			 * 底部退出按钮
+			 */
 			outDilalog() {
 				this.showDilalog = false;
 				this.$emit("closeDig");
@@ -131,8 +142,8 @@
 					}).catch(() => {
 						this.outDilalog();
 					});
-				} else if(this.DealDepartType == "edit") {
-					this.confirmUpdata()
+				} else if (this.DealDepartType == "edit") {
+					this.confirmUpdata();
 				} else {
 					this.updateData();
 				}
@@ -140,29 +151,30 @@
 			/**
 			 * 确认更新
 			 */
-			confirmUpdata(){
+			confirmUpdata() {
+				let oldData = this.findDpartData(this.$store.state.oldDepartData.Childs, this.newData.NodeId);
+				console.log(oldData, '旧数据');
 				let extAttrib = {};
 				extAttrib.DptManager = this.DptManager;
 				extAttrib.DptLeader = this.DptLeader;
 				extAttrib.Remark = this.Remark;
-				this.newData.Name = this.Name;
-				this.newData.ExtAttrib = JSON.stringify(extAttrib);
-				this.newData.isShow = true;
-				this.newData.Childs = {
-					isShow:true,
-					MaxID: this.newData.MaxID,
-					_Items:this.newData.Childs
-				}
-				delete this.newData.MaxID;
-				this.$axios.post('/Service/RoleRightMge.svrx/UpdateDepartment', this.$qs.stringify({
-					token: this.$store.state.adminData.Token,
-					id: this.newData.NodeId,
-					data: JSON.stringify(this.newData)
-				})).then(res=>{
-					console.log(res, '修改');
-					this.$emit("confirm");
+				oldData.Name = this.Name;
+				oldData.ExtAttrib = JSON.stringify(extAttrib);
+				console.log(oldData, '新数据');
+				this.$axios
+					.post(
+						"/Service/RoleRightMge.svrx/UpdateDepartment",
+						this.$qs.stringify({
+							token: this.$store.state.adminData.Token,
+							id: this.newData.NodeId,
+							data: JSON.stringify(oldData)
+						})
+					)
+					.then(res => {
+						this.$emit("confirm");
 						this.outDilalog();
-				}).catch(err=>this.outDilalog())
+					})
+					.catch(err => this.outDilalog());
 			},
 			/**
 			 * 添加数据
@@ -202,10 +214,58 @@
 			choicePeop(e) {
 				console.log("dianwo");
 			},
+			/**
+			 * 选择用户的信息
+			 */
 			choiceUser(data, type) {
-				console.log(data, type);
-				this[type].Name = data[0].Name;
-				this[type].UniqID = data[0].UniqID;
+				if (data.length > 0) {
+					this[type].Name = data[0].Name;
+					this[type].UniqID = data[0].UniqID;
+				}
+			},
+			/**
+			 * 根据NodeId值查找部门名称
+			 */
+			findDpartName(ParentId) {
+				let departments = this.$store.state.departments;
+				let findFunc = (departments, ParentId) => {
+					let Name = null;
+					for (let item of departments) {
+						if (item.NodeId === ParentId) {
+							Name = item.Name;
+							break;
+						} else {
+							Name = findFunc(item.Childs, ParentId);
+							if (Name) {
+								break;
+							}
+						}
+					}
+					return Name;
+				};
+				return findFunc(departments, ParentId);
+			},
+			/**
+			 * 查找部门数据
+			 */
+			findDpartData(dataObj, NodeId) {
+				let data = null;
+				let _Items = dataObj._Items;
+				if (!_Items) {
+					return data;
+				}
+				for (let item of _Items) {
+					if (item.NodeId === NodeId) {
+						data = JSON.parse(JSON.stringify(item));
+						break;
+					} else {
+						data = this.findDpartData(item.Childs, NodeId);
+						if (data) {
+							break;
+						}
+					}
+				}
+				return data;
 			}
 		},
 		mounted() {
@@ -214,14 +274,18 @@
 			});
 		},
 		created() {
-			if(this.DealDepartType == "edit"){
+			if (this.DealDepartType == "edit") {
+				// 编辑操作初始化
 				console.log(this.departInfo);
+				this.fName = this.findDpartName(this.departInfo.ParentId);
 				this.Name = this.departInfo.Name;
 				this.newData = Object.assign({}, this.departInfo);
 				let extAttrib = JSON.parse(this.departInfo.ExtAttrib);
 				this.DptManager = extAttrib.DptManager;
 				this.DptLeader = extAttrib.DptLeader;
-				this.Remark = extAttrib.Remark
+				this.Remark = extAttrib.Remark;
+			} else {
+				this.fName = this.departInfo.Name;
 			}
 		},
 		components: {
@@ -292,7 +356,7 @@
 			border-color: #80bdff;
 			box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 		}
-		&__textarea>textarea{
+		&__textarea > textarea {
 			font-size: 12px;
 			outline: none;
 			border: 1px solid #ced4da;
@@ -301,7 +365,7 @@
 			border-bottom-right-radius: 2px;
 			padding: 5px;
 		}
-		&__textarea>textarea:focus{
+		&__textarea > textarea:focus {
 			@extend .depart-input__text;
 		}
 		&--no-border {
@@ -310,7 +374,6 @@
 		}
 	}
 	.choice_btn {
-		position: relative;
 		outline: none;
 		font-size: 12px;
 		padding: 3px 6px;
